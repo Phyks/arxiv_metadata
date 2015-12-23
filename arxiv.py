@@ -1,3 +1,6 @@
+"""
+This file contains all the arXiv-specific functions.
+"""
 import bbl
 import io
 import requests

@@ -7,14 +7,6 @@ import arxiv
 import bbl
 
 
-def oa_from_doi(doi):
-    """
-    Get an OA version for a given DOI.
-    """
-    # http://beta.dissem.in/api/10.1088/1367-2630/17/9/093036
-    pass
-
-
 if __name__ == "__main__":
     import pprint
     if len(sys.argv) < 2:

@@ -1,3 +1,8 @@
+"""
+This file contains all the DOI-related functions.
+"""
+import requests
+
 import regex
 import tools
 
@@ -75,3 +80,27 @@ def match_doi_or_arxiv(text, only=["DOI", "arXiv"]):
         if extractID:
             return ("arXiv", extractID.group(1))
     return None
+
+
+def get_oa_version(doi):
+    """
+    Get an OA version for a given DOI.
+
+    Params:
+        - doi is a DOI or a dx.doi.org link.
+
+    Returns the URL of the OA version of the given DOI, or None.
+    """
+    # If DOI is a link, truncate it
+    if "dx.doi.org" in doi:
+        doi = doi[doi.find("dx.doi.org") + 11:]
+    r = requests.get("http://beta.dissem.in/api/%s" % (doi,))
+    oa_url = None
+    if r.status_code == requests.codes.ok:
+        result = r.json()
+        if("status" in result and
+           "paper" in result and
+           result["status"] == "ok" and
+           "pdf_url" in result["paper"]):
+            oa_url = result["paper"]["pdf_url"]
+    return oa_url

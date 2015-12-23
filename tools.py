@@ -1,3 +1,8 @@
+"""
+This file contains various utility functions.
+"""
+
+
 def replaceAll(text, dic):
     """Replace all the dic keys by the associated item in text"""
     for i, j in dic.items():

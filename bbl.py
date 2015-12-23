@@ -1,3 +1,6 @@
+"""
+This files contains all the functions to deal with bbl files.
+"""
 import doi
 import math
 import os
