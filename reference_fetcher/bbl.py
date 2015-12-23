@@ -1,14 +1,14 @@
 """
 This files contains all the functions to deal with bbl files.
 """
-import doi
 import math
 import os
 import requests
 import subprocess
 
-import regex
-import tools
+from . import doi
+from . import regex
+from . import tools
 
 
 def clean_bibitem(bibitem):

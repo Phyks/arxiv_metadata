@@ -8,19 +8,19 @@ For building `opendetex` (which is a necessary dependency), you will need
 
 * Clone this repository: `git clone https://github.com/Phyks/arxiv_metadata`.
 * Init submodules (`opendetex`): `git submodule init; git submodule update`.
-* Build `opendetex`: `cd opendetex; make`.
+* Build `opendetex`: `cd reference_fetcher/opendetex; make`.
 * You are ready to go.
 
 ## Usage
 
-* `./main.py some_file.bbl` to get a list of DOIs associated to each `\bibitem`.
-* `./main.py arxiv_eprint_id` to get a list of DOIs associated to each reference from the provided arXiv eprint.
+* `./fetch_references.py some_file.bbl` to get a list of DOIs associated to each `\bibitem`.
+* `./fetch_references.py arxiv_eprint_id` to get a list of DOIs associated to each reference from the provided arXiv eprint.
 
 
 ## Example
 
 ```
-$ ./main.py 1401.2910
+$ ./fetch_references.py 1401.2910
 ```
 
 ```
@@ -67,7 +67,7 @@ $ ./main.py 1401.2910
 
 
 ```
-$ ./main.py /tmp/test.bbl
+$ ./fetch_reference.py /tmp/test.bbl
 ```
 
 ```

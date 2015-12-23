@@ -3,8 +3,8 @@ This file contains all the DOI-related functions.
 """
 import requests
 
-import regex
-import tools
+from . import regex
+from . import tools
 
 
 def extract_doi_links(urls):

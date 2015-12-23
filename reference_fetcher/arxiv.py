@@ -1,10 +1,11 @@
 """
 This file contains all the arXiv-specific functions.
 """
-import bbl
 import io
 import requests
 import tarfile
+
+from . import bbl
 
 
 def sources_from_arxiv(eprint):
