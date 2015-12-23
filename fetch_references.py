@@ -3,8 +3,8 @@ import os
 import sys
 
 # Local import
-from ..reference_fetcher import arxiv
-from ..reference_fetcher import bbl
+from reference_fetcher import arxiv
+from reference_fetcher import bbl
 
 
 if __name__ == "__main__":
