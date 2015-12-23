@@ -1,0 +1,3 @@
+[submodule "opendetex"]
+	path = opendetex
+	url = https://github.com/Phyks/opendetex
