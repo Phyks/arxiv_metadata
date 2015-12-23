@@ -13,6 +13,22 @@ regex_urls = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[
 regex_bibitems = re.compile(r"\\bibitem\{.+?\}")
 regex_endthebibliography = re.compile(r"\\end\{thebibliography}")
 
+regex_doi = re.compile('(?<=doi)/?:?\s?[0-9\.]{7}/\S*[0-9]', re.IGNORECASE)
+regex_doi_pnas = re.compile('(?<=doi).?10.1073/pnas\.\d+', re.IGNORECASE)
+regex_doi_jsb = re.compile('10\.1083/jcb\.\d{9}', re.IGNORECASE)
+regex_clean_doi = re.compile('^/')
+regex_clean_doi_fabse = re.compile('^10.1096')
+regex_clean_doi_jcb = re.compile('^10.1083')
+regex_clean_doi_len = re.compile(r'\d\.\d')
+regex_arXiv = re.compile(r'arXiv:\s*([\w\.\/\-]+)', re.IGNORECASE)
+
+
+def replaceAll(text, dic):
+    """Replace all the dic keys by the associated item in text"""
+    for i, j in dic.items():
+        text = text.replace(i, j)
+    return text
+
 
 def clean_whitespaces(text):
     """
@@ -96,6 +112,58 @@ def extract_arxiv_links(urls):
         return None
 
 
+def match_doi_or_arxiv(text, only=["DOI", "arXiv"]):
+    """
+    Search for a valid article ID (DOI or ArXiv) in the given text
+    (regex-based).
+
+    Returns a tuple (type, first matching ID) or None if not found.
+    From : http://en.dogeno.us/2010/02/release-a-python-script-for-organizing-scientific-papers-pyrenamepdf-py/
+    and https://github.com/minad/bibsync/blob/3fdf121016f6187a2fffc66a73cd33b45a20e55d/lib/bibsync/utils.rb
+    """
+    text = text.lower()
+    # Try to extract DOI
+    if "DOI" in only:
+        extractID = regex_doi.search(text.replace('&#338;', '-'))
+        if not extractID:
+            # PNAS fix
+            extractID = regex_doi_pnas.search(text.
+                                              replace('pnas', '/pnas'))
+            if not extractID:
+                # JSB fix
+                extractID = regex_doi_jsb.search(text)
+        if extractID:
+            # If DOI extracted, clean it and return it
+            cleanDOI = False
+            cleanDOI = extractID.group(0).replace(':', '').replace(' ', '')
+            if regex_clean_doi.search(cleanDOI):
+                cleanDOI = cleanDOI[1:]
+            # FABSE J fix
+            if regex_clean_doi_fabse.search(cleanDOI):
+                cleanDOI = cleanDOI[:20]
+            # Second JCB fix
+            if regex_clean_doi_jcb.search(cleanDOI):
+                cleanDOI = cleanDOI[:21]
+            if len(cleanDOI) > 40:
+                cleanDOItemp = regex_clean_doi_len.sub('000', cleanDOI)
+                reps = {'.': 'A', '-': '0'}
+                cleanDOItemp = replaceAll(cleanDOItemp[8:], reps)
+                digitStart = 0
+                for i in range(len(cleanDOItemp)):
+                    if cleanDOItemp[i].isdigit():
+                        digitStart = 1
+                        if cleanDOItemp[i].isalpha() and digitStart:
+                            break
+                cleanDOI = cleanDOI[0:(8+i)]
+            return ("DOI", cleanDOI)
+    # Else, try to extract arXiv
+    if "arXiv" in only:
+        extractID = regex_arXiv.search(text)
+        if extractID:
+            return ("arXiv", extractID.group(1))
+    return None
+
+
 def dois_from_bbl(bbl):
     """
     Get the papers cited by the paper identified by the given DOI.
@@ -125,6 +193,19 @@ def dois_from_bbl(bbl):
         doi_url = extract_doi_links(urls)
         if doi_url:
             dois[citation] = doi_url
+        # Try to find a direct match using a regex if links search failed
+        if not doi_url and not arxiv_url:
+            regex_match = match_doi_or_arxiv(citation)
+            if regex_match:
+                print(regex_match)
+                citation = citation.replace(regex_match[1], "")
+                if regex_match[0] == "DOI":
+                    dois[citation] = "http://dx.doi.org/%s" % (regex_match[1],)
+                else:
+                    dois[citation] = (
+                        "http://arxiv.org/abs/%s" %
+                        (regex_match[1].replace("arxiv:", ""),)
+                    )
         # If no match found, stack it for next step
         if citation not in dois:
             cleaned_citations.append(citation)
