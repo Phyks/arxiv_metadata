@@ -13,4 +13,5 @@ For building `opendetex` (which is a necessary dependency), you will need
 
 ## Usage
 
-`./main.py some_file.bbl` to get a list of DOIs associated to each `\bibitem`.
+* `./main.py some_file.bbl` to get a list of DOIs associated to each `\bibitem`.
+* `./main.py arxiv_eprint_id` to get a list of DOIs associated to each reference from the provided arXiv eprint.
