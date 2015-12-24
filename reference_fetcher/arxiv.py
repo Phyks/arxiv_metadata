@@ -4,6 +4,7 @@ This file contains all the arXiv-specific functions.
 import io
 import requests
 import tarfile
+import xml.etree.ElementTree
 
 from . import bbl
 
@@ -38,7 +39,7 @@ def bbl_from_arxiv(eprint):
     return bbl_files
 
 
-def get_dois(eprint):
+def get_cited_dois(eprint):
     """
     Get the .bbl files (if any) of a given preprint.
 
@@ -52,3 +53,46 @@ def get_dois(eprint):
     for bbl_file in bbl_files:
         dois.update(bbl.get_dois(bbl_file))
     return dois
+
+
+def get_arxiv_eprint_from_doi(doi):
+    """
+    Get the arXiv eprint id for a given DOI.
+
+    Params:
+        - doi is the DOI of the resource to look for.
+
+    Returns the arXiv eprint id, or None if not found.
+    """
+    r = requests.get("http://export.arxiv.org/api/query",
+                     params={
+                         "search_query": "doi:%s" % (doi,),
+                         "max_results": 1
+                     })
+    e = xml.etree.ElementTree.fromstring(r.content)
+    for entry in e.iter("{http://www.w3.org/2005/Atom}entry"):
+        id = entry.find("{http://www.w3.org/2005/Atom}id").text
+        return id.replace("http://arxiv.org/abs/", "")
+    return None
+
+
+def get_doi(eprint):
+    """
+    Get the associated DOI for a given arXiv eprint.
+
+    Params:
+        - eprint is the arXiv eprint id.
+
+    Returns the DOI if any, or None.
+    """
+    r = requests.get("http://export.arxiv.org/api/query",
+                     params={
+                         "id_list": eprint,
+                         "max_results": 1
+                     })
+    e = xml.etree.ElementTree.fromstring(r.content)
+    for entry in e.iter("{http://www.w3.org/2005/Atom}entry"):
+        doi = entry.find("{http://arxiv.org/schemas/atom}doi")
+        if doi is not None:
+            return doi.text
+    return None

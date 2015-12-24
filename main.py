@@ -1,31 +1,56 @@
 #!/usr/bin/env python3
-from bottle import get, post, run
+import bottle
 from bottle.ext import sqlalchemy
-from sqlalchemy import create_engine, Column, Integer, Sequence, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
+
+import database
+import routes
+
+# Initialize db and include the SQLAlchemy plugin in bottle
+engine = create_engine('sqlite:///:memory:', echo=True)
+
+app = bottle.Bottle()
+plugin = sqlalchemy.Plugin(
+    # SQLAlchemy engine created with create_engine function.
+    engine,
+    # SQLAlchemy metadata, required only if create=True.
+    database.Base.metadata,
+    # Keyword used to inject session database in a route (default 'db').
+    keyword='db',
+    # If it is true, execute `metadata.create_all(engine)` when plugin is
+    # applied (default False).
+    create=True,
+    # If it is true, plugin commit changes after route is executed (default
+    # True).
+    commit=True,
+    # If it is true and keyword is not defined, plugin uses **kwargs argument
+    # to inject session database (default False).
+    use_kwargs=False
+)
+
+app.install(plugin)
 
 
-@get("/doi/<doi:path>")
-def doi(doi):
-    """
-    GET /doi/<DOI>
-
-    {}
-    """
-    # TODO
-    pass
+# Auto enable foreign keys for SQLite
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
-@post("/doi/<doi:path>")
-def doi_post(doi):
-    """
-    POST /doi/<DOI>
+# Routes
+app.get("/papers", callback=routes.get.fetch_papers)
+app.get("/papers/<id:int>", callback=routes.get.fetch_by_id)
 
-    {}
-    """
-    # TODO
-    pass
+# TODO: Fetch relationships
+
+
+app.post("/papers", callback=routes.post.create_paper)
+
+# TODO: Update relationships
 
 
 if __name__ == "__main__":
-    run(host='localhost', port=8080, debug=True)
+    app.run(host='localhost', port=8080, debug=True)

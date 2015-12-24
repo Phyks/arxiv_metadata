@@ -15,4 +15,4 @@ if __name__ == "__main__":
     if os.path.isfile(sys.argv[1]):
         pprint.pprint(bbl.get_dois(sys.argv[1]))
     else:
-        pprint.pprint(arxiv.get_dois(sys.argv[1]))
+        pprint.pprint(arxiv.get_cited_dois(sys.argv[1]))
