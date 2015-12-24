@@ -21,15 +21,32 @@ def create_paper(db):
 
     {
         "data": {
-            "doi": "DOI",
+            "doi": "10.1126/science.1252319",
             // OR
-            "arxiv_id": "ARXIV_ID"
+            "arxiv_id": "1401.2910"
         }
     }
     ```
 
     ```
-    {} TODO
+    {
+        "data": {
+            {
+                "type": "papers",
+                "id": 1,
+                "attributes": {
+                    "doi": "10.1126/science.1252319",
+                    "arxiv_id": "1401.2910"
+                },
+                "links": {
+                    "self": "/papers/1"
+                },
+                "relationships": {
+                    TODO
+                }
+            }
+        }
+    }
     ```
     """
     data = json.loads(bottle.request.body.read().decode("utf-8"))
@@ -54,10 +71,12 @@ def create_paper(db):
     response = {
         "data": paper.json_api_repr()
     }
-    # Note: Return a 202 as the resource has been accepted but is not yet
+    # TODO: Return a 202 as the resource has been accepted but is not yet
     # processed, especially since its relationships have not yet been fetched.
-    # TODO: Redirection
-    return bottle.HTTPResponse(status=202, body=tools.pretty_json(response))
+    headers = {"Location": "/papers/%d" % (paper.id,)}
+    return tools.APIResponse(status=202,
+                             body=tools.pretty_json(response),
+                             headers=headers)
 
 
 def create_by_doi(doi, db):

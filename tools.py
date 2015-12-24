@@ -1,6 +1,7 @@
 """
 Various utility functions.
 """
+import bottle
 import json
 
 
@@ -12,3 +13,17 @@ def pretty_json(data):
                       sort_keys=True,
                       indent=4,
                       separators=(',', ': '))
+
+
+class APIResponse(bottle.HTTPResponse):
+    """
+    Extend bottle.HTTPResponse base class to add Content-Type header.
+    """
+    def __init__(self, body='', status=None, headers=None, **more_headers):
+        if headers is None:
+            headers = {}
+        headers["Content-Type"] = "application/vnd.api+json"
+        super(APIResponse, self).__init__(body,
+                                          status,
+                                          headers,
+                                          **more_headers)
