@@ -3,13 +3,13 @@ import bottle
 from bottle.ext import sqlalchemy
 from sqlalchemy import create_engine
 
+import config
 import database
 import routes
 import tools
 
 # Initialize db and include the SQLAlchemy plugin in bottle
-# engine = create_engine('sqlite:///:memory:', echo=True)
-engine = create_engine('sqlite:///dev.db', echo=True)
+engine = create_engine('sqlite:///%s' % (config.database,), echo=True)
 
 app = bottle.Bottle()
 plugin = sqlalchemy.Plugin(
@@ -59,4 +59,4 @@ app.route("/papers/<id:int>/relationships/<name>", method="PATCH",
 
 
 if __name__ == "__main__":
-    app.run(host='localhost', port=8080, debug=True)
+    app.run(host=config.host, port=config.port, debug=(not config.production))
