@@ -81,18 +81,7 @@ def create_paper(db):
         "data": paper.json_api_repr()
     }
     # Import "cite" relation
-    if paper.arxiv_id is not None:
-        # Get the cited DOIs
-        cited_dois = arxiv.get_cited_dois(paper.arxiv_id)
-        # Filter out the ones that were not matched
-        cited_dois = [cited_dois[k]
-                      for k in cited_dois if cited_dois[k] is not None]
-        for doi in cited_dois:
-            right_paper = create_by_doi(doi, db)
-            if right_paper is None:
-                right_paper = (db.query(database.Paper).
-                               filter_by(doi=doi).first())
-            update_relationship_backend(paper.id, right_paper.id, "cite", db)
+    add_cite_relationship(paper, db)
     # Return 200 with the correct body
     headers = {"Location": "/papers/%d" % (paper.id,)}
     return tools.APIResponse(status=200,
@@ -157,9 +146,60 @@ def create_by_arxiv(arxiv, db):
     return paper
 
 
+def add_cite_relationship(paper, db):
+    """
+    Add the "cite" relationships between the provided paper and the papers
+    referenced by it.
+
+    :param paper: The paper to fetch references from.
+    :param db: A database session
+    :returns: Nothing.
+    """
+    # TODO: Known bug: too many levels of recursion!
+    # If paper is on arXiv
+    if paper.arxiv_id is not None:
+        # Get the cited DOIs
+        cited_dois = arxiv.get_cited_dois(paper.arxiv_id)
+        # Filter out the ones that were not matched
+        cited_dois = [cited_dois[k]
+                      for k in cited_dois if cited_dois[k] is not None]
+        for doi in cited_dois:
+            # Get the associated paper in the db
+            right_paper = (db.query(database.Paper).
+                           filter_by(doi=doi).first())
+            if right_paper is None:
+                # If paper does not exist in db, add it
+                right_paper = create_by_doi(doi, db)
+                # Update cite relationship for this paper, recursively
+                add_cite_relationship(right_paper, db)
+            # Update the relationships
+            update_relationship_backend(paper.id, right_paper.id, "cite", db)
+    # If paper is not on arXiv, nothing to do
+    else:
+        return
+
+
 def update_relationships(id, name, db):
     """
     Update the relationships associated to a given paper.
+
+    .. code-block:: bash
+
+        POST /papers/1/relationships/cite
+        Content-Type: application/vnd.api+json
+        Accept: application/vnd.api+json
+
+        {
+            "data": [
+                { "type": "cite", "id": "2" },
+                …
+            ]
+        }
+
+
+    .. code-block:: json
+
+        HTTP 204
 
     :param id: The id of the paper to update relationships.
     :param name: The name of the relationship to update.

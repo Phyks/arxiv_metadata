@@ -3,7 +3,41 @@ Metadata for arXiv
 
 The goal of this repository is to provide a minimal API to put metadata on arXiv papers.
 
-TODO: Better description + API description.
+## Introduction
+
+Most of the published scientific papers are availabe online, as preprints. For
+physics and computer science, most of them are available on the
+[arXiv](http://arxiv.org/) repository. Published paper get a unique (global)
+identifier, a [DOI](https://en.wikipedia.org/wiki/Digital_object_identifier).
+Preprint papers released on arXiv get a unique
+[identifier](https://arxiv.org/help/arxiv_identifier). Correspondance between
+these two identifiers can be made quite easily once the preprint is published,
+as some publishers pushes back the DOIs to arXiv.
+
+Then, all these articles can be easily identified and tracked. However, very
+small use of this is done, and especially there is no way to post metadata
+between articles. For example, getting a (usable) list of articles referencing
+a given article, or referenced by it, is very difficult (and a textual
+bibliography is not a usable list of articles, as it is truly difficult to
+parse).
+
+This basic Python code offers a way to add some metadata between articles. One
+can import articles in it. It automatically tries to fetch referenced papers
+and add the corresponding relationships between these papers and the added
+paper. Relationships are reversible which means one can easily get the papers
+citing a given paper.
+
+It offers an API to add extra metadata. One could for instance imagine adding
+others relations between papers to say they are similar, extra possible
+reference, or so on.
+
+One could even imagine extending this further to tag papers, just as arXiv do
+(in some sort) with their "categories" (such as
+[cond-mat](http://arxiv.org/archive/cond-mat)) so that researchers could follow
+tags relative to their area of research, and get a narrower and better targeted
+list of papers everyday. Plus everyone could tag articles in a collaborative
+way, so that some papers which might be of interest for a field, but were not
+tagged as such, would reach it anyway.
 
 
 ## Installation
@@ -23,10 +57,213 @@ For building `opendetex` (which is a necessary dependency), you will need
 
 You can test it easily using the Bottle built-in webserver. This is the default configuration.
 
-To start the app, just run `python3 ./main.py` and head to http://localhost:8080.
+To start the app, just run `python3 ./main.py` and head to [http://localhost:8080](http://localhost:8080).
 
 
 You should not use this server in production, and should edit `main.py` accordingly.
+
+## API
+
+### Index
+
+```
+GET /
+```
+
+```json
+{
+    "papers": "/papers/?id={id}&doi={doi}&arxiv_id={arxiv_id}",
+}
+```
+
+### Get papers
+
+```
+GET /papers
+Accept: application/vnd.api+json
+```
+
+One can filter further using `id={id}`, `doi={doi}` or `arxiv_id={arxiv_id}`
+query parameters.
+
+```json
+    {
+        "data": [
+            {
+                "type": "papers",
+                "id": 1,
+                "attributes": {
+                    "doi": "10.1126/science.1252319",
+                    "arxiv_id": "1401.2910"
+                },
+                "links": {
+                    "self": "/papers/1"
+                },
+                "relationships": {
+                    "cite": {
+                        "links": {
+                            "related": "/papers/1/relationships/cite"
+                        }
+                    },
+                    …
+                }
+            }
+        ]
+    }
+```
+
+
+### Get a paper
+
+```
+GET /papers/1
+Accept: application/vnd.api+json
+```
+
+```json
+{
+    "data": {
+        "type": "papers",
+        "id": 1,
+        "attributes": {
+            "doi": "10.1126/science.1252319",
+            "arxiv_id": "1401.2910"
+        },
+        "links": {
+            "self": "/papers/1"
+        },
+        "relationships": {
+            "cite": {
+                "links": {
+                    "related": "/papers/1/relationships/cite"
+                }
+            },
+            …
+        }
+    }
+}
+```
+
+
+### Get the relationships of a paper
+
+```
+GET /papers/1/relationships/cite
+Accept: application/vnd.api+json
+```
+
+```json
+{
+    "links": {
+        "self": "/papers/1/relationships/cite",
+        "related": "/papers/1/cite"
+    },
+    "data": [
+        {
+            "type": "papers",
+            "id": 2,
+        },
+        …
+    ]
+}
+```
+
+The previous relationship is to be understood as `paper 1 cites paper 2`.
+
+Using `?reverse=1`, one can reverse the relationships (ie get results for
+papers that cites the paper identified by the id in the URL, in the previous
+case).
+
+
+### Post a paper
+
+```
+POST /papers
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": {
+        "doi": "10.1126/science.1252319",
+        // OR
+        "arxiv_id": "1401.2910"
+    }
+}
+```
+
+`arxiv_id` (respectively `doi`) is fetched automatically if available.
+
+```json
+{
+    "data": {
+        {
+            "type": "papers",
+            "id": 1,
+            "attributes": {
+                "doi": "10.1126/science.1252319",
+                "arxiv_id": "1401.2910"
+            },
+            "links": {
+                "self": "/papers/1"
+            },
+            "relationships": {
+                "cite": {
+                    "links": {
+                        "related": "/papers/1/relationships/cite"
+                    }
+                },
+                …
+            }
+        }
+    }
+}
+```
+
+
+### Create a relationship between two papers
+
+```
+POST /papers/1/relationships/cite
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": [
+        { "type": "cite", "id": "2" },
+        …
+    ]
+}
+```
+
+Response is empty HTTP 204.
+
+
+### Delete a paper and associated relationships
+
+```
+DELETE /papers/1
+Accept: application/vnd.api+json
+```
+
+Response is empty HTTP 204.
+
+
+### Delete a relationship between two papers
+
+```
+DELETE /papers/1/relationships/cite
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": [
+        { "type": "cite", "id": "2" },
+        …
+    ]
+}
+```
+
+Response is empty HTTP 204.
 
 
 ## Associated library
