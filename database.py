@@ -1,6 +1,8 @@
 """
 This file contains the database schema in SQLAlchemy format.
 """
+import sqlite3
+
 from sqlalchemy import event
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.engine import Engine
@@ -15,12 +17,13 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     """
     Auto enable foreign keys for SQLite.
     """
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+    # Play well with other DB backends
+    if type(dbapi_connection) is sqlite3.Connection:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
-# TODO: Backref
 class Association(Base):
     # Relationships are to be read "left RELATION right"
     __tablename__ = "association"
@@ -32,12 +35,15 @@ class Association(Base):
                                         ondelete="CASCADE"))
     right_paper = sqlalchemy_relationship("Paper",
                                           foreign_keys=right_id,
-                                          back_populates="related_by")
-    relationship = sqlalchemy_relationship("Relationship")
+                                          back_populates="related_by",
+                                          passive_deletes=True)
+    relationship = sqlalchemy_relationship("Relationship",
+                                           passive_deletes=True)
 
     left_paper = sqlalchemy_relationship("Paper",
                                          foreign_keys=left_id,
-                                         back_populates="related_to")
+                                         back_populates="related_to",
+                                         passive_deletes=True)
 
 
 class Paper(Base):
@@ -48,11 +54,13 @@ class Paper(Base):
     # related_to are papers related to this paper (this_paper R …)
     related_to = sqlalchemy_relationship("Association",
                                          foreign_keys="Association.left_id",
-                                         back_populates="left_paper")
+                                         back_populates="left_paper",
+                                         passive_deletes=True)
     # related_by are papers referenced by this paper (… R this_paper)
     related_by = sqlalchemy_relationship("Association",
                                          foreign_keys="Association.right_id",
-                                         back_populates="right_paper")
+                                         back_populates="right_paper",
+                                         passive_deletes=True)
 
     def __repr__(self):
         return "<Paper(id='%d', doi='%s', arxiv_id='%s')>" % (
@@ -95,4 +103,5 @@ class Relationship(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(), unique=True)
     associations = sqlalchemy_relationship("Association",
-                                           back_populates="relationship")
+                                           back_populates="relationship",
+                                           passive_deletes=True)
