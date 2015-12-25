@@ -36,7 +36,12 @@ def fetch_papers(db):
                         "self": "/papers/1"
                     },
                     "relationships": {
-                        TODO
+                        "cite": {
+                            "links": {
+                                "related": "/papers/1/relationships/cite"
+                            }
+                        },
+                        …
                     }
                 }
             ]
@@ -62,7 +67,7 @@ def fetch_by_id(id, db):
 
     .. code-block:: bash
 
-        GET /id/<id>
+        GET /papers/1
         Accept: application/vnd.api+json
 
 
@@ -70,24 +75,27 @@ def fetch_by_id(id, db):
 
         {
             "data": {
-                {
-                    "type": "papers",
-                    "id": 1,
-                    "attributes": {
-                        "doi": "10.1126/science.1252319",
-                        "arxiv_id": "1401.2910"
+                "type": "papers",
+                "id": 1,
+                "attributes": {
+                    "doi": "10.1126/science.1252319",
+                    "arxiv_id": "1401.2910"
+                },
+                "links": {
+                    "self": "/papers/1"
+                },
+                "relationships": {
+                    "cite": {
+                        "links": {
+                            "related": "/papers/1/relationships/cite"
+                        }
                     },
-                    "links": {
-                        "self": "/papers/1"
-                    },
-                    "relationships": {
-                        TODO
-                    }
+                    …
                 }
             }
         }
 
-    :param id: The id of the requested article.
+    :param id: The id of the requested paper.
     :param db: A database session, injected by the ``Bottle`` plugin.
     :returns: An ``HTTPResponse``.
     """
@@ -101,6 +109,55 @@ def fetch_by_id(id, db):
 
 def fetch_relationship(id, name, db):
     """
-    TODO
+    Fetch relationships of the given type associated with the given paper.
+
+    .. code-block:: bash
+
+        GET /papers/1/relationships/cite
+        Accept: application/vnd.api+json
+
+
+    .. code-block:: json
+
+        {
+            "links": {
+                "self": "/papers/1/relationships/cite",
+                "related": "/papers/1/cite"
+            },
+            "data": [
+                {
+                    "type": "papers",
+                    "id": 2,
+                },
+                …
+            ]
+        }
+
+    :param id: The id of the requested paper.
+    :param name: The name of the requested relationship for this paper.
+    :param db: A database session, injected by the ``Bottle`` plugin.
+    :returns: An ``HTTPResponse``.
     """
-    pass
+    reversed = (
+        "reverse" in bottle.request.params and
+        bottle.request.params["reverse"] != 0
+    )
+    resource = db.query(database.Paper).filter_by(id=id).first()
+    if resource:
+        response = {
+            "links": {
+                "self": "/papers/%d/relationships/%s" % (id, name),
+                "related": "/papers/%d/%s" % (id, name),
+            },
+            "data": [
+            ]
+        }
+        if reversed:
+            relationships = resource.related_by
+        else:
+            relationships = resource.related_to
+        for r in relationships:
+            if r.relationship.name == name:
+                response["data"].append({"type": name, "id": r.right_id})
+        return tools.APIResponse(tools.pretty_json(response))
+    return bottle.HTTPError(404, "Not found")

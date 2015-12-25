@@ -30,8 +30,14 @@ class Association(Base):
     relationship_id = Column(Integer,
                              ForeignKey("relationships.id",
                                         ondelete="CASCADE"))
-    right_paper = sqlalchemy_relationship("Paper", foreign_keys=right_id)
+    right_paper = sqlalchemy_relationship("Paper",
+                                          foreign_keys=right_id,
+                                          back_populates="related_by")
     relationship = sqlalchemy_relationship("Relationship")
+
+    left_paper = sqlalchemy_relationship("Paper",
+                                         foreign_keys=left_id,
+                                         back_populates="related_to")
 
 
 class Paper(Base):
@@ -39,8 +45,14 @@ class Paper(Base):
     id = Column(Integer, primary_key=True)
     doi = Column(String(), nullable=True, unique=True)
     arxiv_id = Column(String(25), nullable=True, unique=True)
-    related = sqlalchemy_relationship("Association",
-                                      foreign_keys="Association.left_id")
+    # related_to are papers related to this paper (this_paper R …)
+    related_to = sqlalchemy_relationship("Association",
+                                         foreign_keys="Association.left_id",
+                                         back_populates="left_paper")
+    # related_by are papers referenced by this paper (… R this_paper)
+    related_by = sqlalchemy_relationship("Association",
+                                         foreign_keys="Association.right_id",
+                                         back_populates="right_paper")
 
     def __repr__(self):
         return "<Paper(id='%d', doi='%s', arxiv_id='%s')>" % (
@@ -53,6 +65,7 @@ class Paper(Base):
         """
         Dict to dump for the JSON API.
         """
+        relationships = [a.relationship.name for a in self.related_to]
         return {
             "types": self.__tablename__,
             "id": self.id,
@@ -64,7 +77,15 @@ class Paper(Base):
                 "self": "/papers/%d" % (self.id,)
             },
             "relationships": {
-                # TODO
+                k: {
+                    "links": {
+                        "related": (
+                            "/papers/%d/relationships/%s?reverse={reverse}" %
+                            (self.id, k)
+                        )
+                    }
+                }
+                for k in relationships
             }
         }
 

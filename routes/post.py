@@ -193,7 +193,7 @@ def update_relationship_backend(left_id, right_id, name, db):
     # Update the relationship
     a = database.Association(relationship_id=relationship.id)
     a.right_paper = right_paper
-    left_paper.related.append(a)
+    left_paper.related_to.append(a)
     try:
         db.add(a)
         db.add(left_paper)

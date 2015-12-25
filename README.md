@@ -3,7 +3,7 @@ Metadata for arXiv
 
 The goal of this repository is to provide a minimal API to put metadata on arXiv papers.
 
-TODO: Better description.
+TODO: Better description + API description.
 
 
 ## Installation

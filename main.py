@@ -45,8 +45,8 @@ app.get("/papers", callback=routes.get.fetch_papers)
 app.get("/papers/<id:int>", callback=routes.get.fetch_by_id)
 app.get("/papers/<id:int>/relationships/<name>",
         callback=routes.get.fetch_relationship)
-
-# TODO: Fetch relationships
+app.get("/papers/<id:int>/<name>",
+        callback=routes.get.fetch_relationship)
 
 
 app.post("/papers", callback=routes.post.create_paper)
