@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 
 import database
 import routes
+import tools
 
 # Initialize db and include the SQLAlchemy plugin in bottle
 engine = create_engine('sqlite:///:memory:', echo=True)
@@ -32,6 +33,12 @@ app.install(plugin)
 
 
 # Routes
+@app.get("/")
+def index():
+    return tools.APIResponse(tools.pretty_json({
+        "papers": "/papers/?id={id}&doi={doi}&arxiv_id={arxiv_id}",
+    }))
+
 app.get("/papers", callback=routes.get.fetch_papers)
 app.get("/papers/<id:int>", callback=routes.get.fetch_by_id)
 

@@ -1,6 +1,11 @@
 Metadata for arXiv
 ==================
 
+The goal of this repository is to provide a minimal API to put metadata on arXiv papers.
+
+TODO: Better description.
+
+
 ## Installation
 
 For building `opendetex` (which is a necessary dependency), you will need
@@ -9,15 +14,38 @@ For building `opendetex` (which is a necessary dependency), you will need
 * Clone this repository: `git clone https://github.com/Phyks/arxiv_metadata`.
 * Init submodules (`opendetex`): `git submodule init; git submodule update`.
 * Build `opendetex`: `cd reference_fetcher/opendetex; make`.
+* [This is all if you only want to use the `reference_fetcher`. Else, go on reading]
+* Download required Python modules: `pip install -r requirements.txt`.
 * You are ready to go.
 
-## Usage
+## Test it
+
+You can test it easily using the Bottle built-in webserver. This is the default configuration.
+
+To start the app, just run `python3 ./main.py` and head to http://localhost:8080.
+
+
+You should not use this server in production, and should edit `main.py` accordingly.
+
+
+## Associated library
+
+`reference_fetcher` is a module you can use to:
+
+* Fetch DOIs (or arXiv ids) of papers referenced by a given paper on arXiv (or any other paper, provided that you have a .bbl file).
+* Fetch DOI associated with a given arXiv paper (if any).
+* Fetch the arXiv identifier associated to a given DOI (if any).
+* and more :)
+
+`fetch_references.py` script in the root folder is here to show you how to use it and to serve as a minimal example.
+
+### Usage
 
 * `./fetch_references.py some_file.bbl` to get a list of DOIs associated to each `\bibitem`.
 * `./fetch_references.py arxiv_eprint_id` to get a list of DOIs associated to each reference from the provided arXiv eprint.
 
 
-## Example
+### Example
 
 ```
 $ ./fetch_references.py 1401.2910
