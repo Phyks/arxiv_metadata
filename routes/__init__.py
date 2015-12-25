@@ -1,4 +1,5 @@
+from . import delete
 from . import get
 from . import post
 
-__all__ = ["get", "post"]
+__all__ = ["delete", "get", "post"]

@@ -44,7 +44,12 @@ def create_paper(db):
                         "self": "/papers/1"
                     },
                     "relationships": {
-                        TODO
+                        "cite": {
+                            "links": {
+                                "related": "/papers/1/relationships/cite"
+                            }
+                        },
+                        …
                     }
                 }
             }

@@ -34,7 +34,6 @@ app.install(plugin)
 
 
 # Routes
-# TODO: Routes for deletion
 @app.get("/")
 def index():
     return tools.APIResponse(tools.pretty_json({
@@ -47,6 +46,10 @@ app.get("/papers/<id:int>/relationships/<name>",
         callback=routes.get.fetch_relationship)
 app.get("/papers/<id:int>/<name>",
         callback=routes.get.fetch_relationship)
+app.route("/papers/<id:int>", method="DELETE",
+          callback=routes.delete.delete_paper)
+app.route("/papers/<id:int>/relationships/<name>", method="DELETE",
+          callback=routes.delete.delete_relationship)
 
 
 app.post("/papers", callback=routes.post.create_paper)
