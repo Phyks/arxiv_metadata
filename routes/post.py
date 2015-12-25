@@ -80,10 +80,22 @@ def create_paper(db):
     response = {
         "data": paper.json_api_repr()
     }
-    # TODO: Return a 202 as the resource has been accepted but is not yet
-    # processed, especially since its relationships have not yet been fetched.
+    # Import "cite" relation
+    if paper.arxiv_id is not None:
+        # Get the cited DOIs
+        cited_dois = arxiv.get_cited_dois(paper.arxiv_id)
+        # Filter out the ones that were not matched
+        cited_dois = [cited_dois[k]
+                      for k in cited_dois if cited_dois[k] is not None]
+        for doi in cited_dois:
+            right_paper = create_by_doi(doi, db)
+            if right_paper is None:
+                right_paper = (db.query(database.Paper).
+                               filter_by(doi=doi).first())
+            update_relationship_backend(paper.id, right_paper.id, "cite", db)
+    # Return 200 with the correct body
     headers = {"Location": "/papers/%d" % (paper.id,)}
-    return tools.APIResponse(status=202,
+    return tools.APIResponse(status=200,
                              body=tools.pretty_json(response),
                              headers=headers)
 
