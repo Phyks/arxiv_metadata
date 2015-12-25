@@ -105,7 +105,7 @@ query parameters.
                             "related": "/papers/1/relationships/cite"
                         }
                     },
-                    …
+                    ...
                 }
             }
         ]
@@ -138,7 +138,7 @@ Accept: application/vnd.api+json
                     "related": "/papers/1/relationships/cite"
                 }
             },
-            …
+            ...
         }
     }
 }
@@ -163,7 +163,7 @@ Accept: application/vnd.api+json
             "type": "papers",
             "id": 2,
         },
-        …
+        ...
     ]
 }
 ```
@@ -196,24 +196,22 @@ Accept: application/vnd.api+json
 ```json
 {
     "data": {
-        {
-            "type": "papers",
-            "id": 1,
-            "attributes": {
-                "doi": "10.1126/science.1252319",
-                "arxiv_id": "1401.2910"
+        "type": "papers",
+        "id": 1,
+        "attributes": {
+            "doi": "10.1126/science.1252319",
+            "arxiv_id": "1401.2910"
+        },
+        "links": {
+            "self": "/papers/1"
+        },
+        "relationships": {
+            "cite": {
+                "links": {
+                    "related": "/papers/1/relationships/cite"
+                }
             },
-            "links": {
-                "self": "/papers/1"
-            },
-            "relationships": {
-                "cite": {
-                    "links": {
-                        "related": "/papers/1/relationships/cite"
-                    }
-                },
-                …
-            }
+            ...
         }
     }
 }
@@ -230,7 +228,7 @@ Accept: application/vnd.api+json
 {
     "data": [
         { "type": "cite", "id": "2" },
-        …
+        ...
     ]
 }
 ```
@@ -258,7 +256,7 @@ Accept: application/vnd.api+json
 {
     "data": [
         { "type": "cite", "id": "2" },
-        …
+        ...
     ]
 }
 ```
