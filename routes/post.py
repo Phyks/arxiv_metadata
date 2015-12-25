@@ -138,3 +138,67 @@ def create_by_arxiv(arxiv, db):
 
     # Return the paper
     return paper
+
+
+def update_relationships(id, name, db):
+    """
+    Update the relationships associated to a given paper.
+
+    :param id: The id of the paper to update relationships.
+    :param name: The name of the relationship to update.
+    :param db: A database session, passed by Bottle plugin.
+    :returns: No content. 204 on success, 403 on error.
+    """
+    data = json.loads(bottle.request.body.read().decode("utf-8"))
+    # Validate the request
+    if "data" not in data:
+        return bottle.HTTPError(403, "Forbidden")
+    # Filter data, invalid entries are ignored
+    data = [i for i in data["data"]
+            if "type" in i and i["type"] == name and "id" in i]
+    # Complete replacement (data == []) is forbidden
+    if len(data) == 0:
+        return bottle.HTTPError(403, "Forbidden")
+    # Update all the relationships
+    for i in data:
+        updated = update_relationship_backend(id, i["id"], name, db)
+        if updated is None:
+            # An error occurred => 403
+            return bottle.HTTPError(403, "Forbidden")
+    # Return an empty 204 on success
+    return tools.APIResponse(status=204, body="")
+
+
+def update_relationship_backend(left_id, right_id, name, db):
+    """
+    Backend method to update a single relationship between two papers.
+
+    :param left_id: ID of the paper on the left of the relationship.
+    :param right_id: ID of the paper on the right of the relationship.
+    :param name: Name of the relationship between the two papers.
+    :param db: A database session.
+    :returns: The updated left paper on success, ``None`` otherwise.
+    """
+    # Load necessary resources
+    left_paper = db.query(database.Paper).filter_by(id=left_id).first()
+    right_paper = db.query(database.Paper).filter_by(id=right_id).first()
+    if left_paper is None or right_paper is None:
+        # Abort
+        return None
+    relationship = db.query(database.Relationship).filter_by(name=name).first()
+    if relationship is None:
+        relationship = database.Relationship(name=name)
+        db.add(relationship)
+        db.flush()
+    # Update the relationship
+    a = database.Association(relationship_id=relationship.id)
+    a.right_paper = right_paper
+    left_paper.related.append(a)
+    try:
+        db.add(a)
+        db.add(left_paper)
+    except IntegrityError:
+        # Unique constraint violation, relationship already exists
+        db.rollback()
+        return None
+    return left_paper

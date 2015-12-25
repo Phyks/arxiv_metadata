@@ -97,3 +97,10 @@ def fetch_by_id(id, db):
             "data": resource.json_api_repr()
         }))
     return bottle.HTTPError(404, "Not found")
+
+
+def fetch_relationship(id, name, db):
+    """
+    TODO
+    """
+    pass

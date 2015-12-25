@@ -8,7 +8,8 @@ import routes
 import tools
 
 # Initialize db and include the SQLAlchemy plugin in bottle
-engine = create_engine('sqlite:///:memory:', echo=True)
+# engine = create_engine('sqlite:///:memory:', echo=True)
+engine = create_engine('sqlite:///dev.db', echo=True)
 
 app = bottle.Bottle()
 plugin = sqlalchemy.Plugin(
@@ -33,6 +34,7 @@ app.install(plugin)
 
 
 # Routes
+# TODO: Routes for deletion
 @app.get("/")
 def index():
     return tools.APIResponse(tools.pretty_json({
@@ -41,13 +43,19 @@ def index():
 
 app.get("/papers", callback=routes.get.fetch_papers)
 app.get("/papers/<id:int>", callback=routes.get.fetch_by_id)
+app.get("/papers/<id:int>/relationships/<name>",
+        callback=routes.get.fetch_relationship)
 
 # TODO: Fetch relationships
 
 
 app.post("/papers", callback=routes.post.create_paper)
 
-# TODO: Update relationships
+app.post("/papers/<id:int>/relationships/<name>",
+         callback=routes.post.update_relationships)
+# Complete replacement of relationships is forbidden
+app.route("/papers/<id:int>/relationships/<name>", method="PATCH",
+          callback=lambda id, name: bottle.HTTPError(403, "Forbidden"))
 
 
 if __name__ == "__main__":
