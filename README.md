@@ -16,6 +16,7 @@ For building `opendetex` (which is a necessary dependency), you will need
 * Build `opendetex`: `cd reference_fetcher/opendetex; make`.
 * [This is all if you only want to use the `reference_fetcher`. Else, go on reading]
 * Download required Python modules: `pip install -r requirements.txt`.
+* [Optional] Update configuration in `config.py`. Default values are for testing and dev.
 * You are ready to go.
 
 ## Test it

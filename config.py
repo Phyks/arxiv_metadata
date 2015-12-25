@@ -1,5 +1,5 @@
-# database = ":memory:"
-database = "dev.db"
+database = ":memory:"
+# database = "db.sqlite3"
 
 host = "localhost"
 port = 8080
