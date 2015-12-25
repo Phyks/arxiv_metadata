@@ -13,12 +13,10 @@ from . import tools
 
 def clean_bibitem(bibitem):
     """
-    Return a plaintext representation of the bibitem from the bbl file.
+    Return a plaintext representation of the bibitem from the ``.bbl`` file.
 
-    Params:
-        - bibitem is the text content of the bibitem.
-
-    Returns a cleaned plaintext citation from the bibitem.
+    :param bibitem: The text content of the bibitem.
+    :returns: A cleaned plaintext citation from the bibitem.
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output = subprocess.check_output(["%s/opendetex/delatex" % (script_dir,),
@@ -31,12 +29,11 @@ def clean_bibitem(bibitem):
 
 def parse(bbl):
     """
-    Parse a *.bbl file to get a clean list of plaintext citations.
+    Parse a ``*.bbl`` file to get a clean list of plaintext citations.
 
-    Params:
-        - bbl is either the path to the .bbl file or the content of a bbl file.
-
-    Returns a list of cleaned plaintext citations.
+    :param bbl: Either the path to the .bbl file or the content of a ``.bbl`` \
+            file.
+    :returns:  A list of cleaned plaintext citations.
     """
     # Handle path or content
     if os.path.isfile(bbl):
@@ -59,11 +56,10 @@ def get_dois(bbl_input):
     """
     Get the papers cited by the paper identified by the given DOI.
 
-    Params:
-        - bbl_input is either the path to the .bbl file or the content of a bbl
-        file.
+    :param bbl_input: Either the path to the .bbl file or the content of a \
+            bbl file.
 
-    Returns a dict of cleaned plaintext citations and their associated doi.
+    :returns: A dict of cleaned plaintext citations and their associated doi.
     """
     cleaned_citations_with_URLs = parse(bbl_input)
     dois = {}

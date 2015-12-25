@@ -13,10 +13,8 @@ def sources_from_arxiv(eprint):
     """
     Download sources on arXiv for a given preprint.
 
-    Params:
-        - eprint is the arXiv id (e.g. 1401.2910 or 1401.2910v1).
-
-    Returns a TarFile object of the sources of the arXiv preprint.
+    :param eprint: The arXiv id (e.g. ``1401.2910`` or ``1401.2910v1``).
+    :returns: A ``TarFile`` object of the sources of the arXiv preprint.
     """
     r = requests.get("http://arxiv.org/e-print/%s" % (eprint,))
     file_object = io.BytesIO(r.content)
@@ -27,10 +25,8 @@ def bbl_from_arxiv(eprint):
     """
     Get the .bbl files (if any) of a given preprint.
 
-    Params:
-        - eprint is the arXiv id (e.g. 1401.2910 or 1401.2910v1).
-
-    Returns a list of the .bbl files as text (if any) or None.
+    :param eprint: The arXiv id (e.g. ``1401.2910`` or ``1401.2910v1``).
+    :returns: A list of the ``.bbl`` files as text (if any) or ``None``.
     """
     tf = sources_from_arxiv(eprint)
     bbl_files = [i for i in tf.getmembers() if i.name.endswith(".bbl")]
@@ -43,10 +39,8 @@ def get_cited_dois(eprint):
     """
     Get the .bbl files (if any) of a given preprint.
 
-    Params:
-        - eprint is the arXiv id (e.g. 1401.2910 or 1401.2910v1).
-
-    Returns a dict of cleaned plaintext citations and their associated doi.
+    :param eprint: The arXiv id (e.g. ``1401.2910`` or ``1401.2910v1``).
+    :returns: A dict of cleaned plaintext citations and their associated doi.
     """
     bbl_files = bbl_from_arxiv(eprint)
     dois = {}
@@ -59,10 +53,8 @@ def get_arxiv_eprint_from_doi(doi):
     """
     Get the arXiv eprint id for a given DOI.
 
-    Params:
-        - doi is the DOI of the resource to look for.
-
-    Returns the arXiv eprint id, or None if not found.
+    :param doi: The DOI of the resource to look for.
+    :returns: The arXiv eprint id, or ``None`` if not found.
     """
     r = requests.get("http://export.arxiv.org/api/query",
                      params={
@@ -80,10 +72,8 @@ def get_doi(eprint):
     """
     Get the associated DOI for a given arXiv eprint.
 
-    Params:
-        - eprint is the arXiv eprint id.
-
-    Returns the DOI if any, or None.
+    :param eprint: The arXiv eprint id.
+    :returns: The DOI if any, or ``None``.
     """
     r = requests.get("http://export.arxiv.org/api/query",
                      params={

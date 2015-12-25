@@ -14,40 +14,44 @@ def create_paper(db):
     """
     Create a new resource identified by its DOI or arXiv eprint id.
 
-    ```
-    POST /papers
-    Content-Type: application/vnd.api+json
-    Accept: application/vnd.api+json
+    .. code-block:: bash
 
-    {
-        "data": {
-            "doi": "10.1126/science.1252319",
-            // OR
-            "arxiv_id": "1401.2910"
+        POST /papers
+        Content-Type: application/vnd.api+json
+        Accept: application/vnd.api+json
+
+        {
+            "data": {
+                "doi": "10.1126/science.1252319",
+                // OR
+                "arxiv_id": "1401.2910"
+            }
         }
-    }
-    ```
 
-    ```
-    {
-        "data": {
-            {
-                "type": "papers",
-                "id": 1,
-                "attributes": {
-                    "doi": "10.1126/science.1252319",
-                    "arxiv_id": "1401.2910"
-                },
-                "links": {
-                    "self": "/papers/1"
-                },
-                "relationships": {
-                    TODO
+
+    .. code-block:: json
+
+        {
+            "data": {
+                {
+                    "type": "papers",
+                    "id": 1,
+                    "attributes": {
+                        "doi": "10.1126/science.1252319",
+                        "arxiv_id": "1401.2910"
+                    },
+                    "links": {
+                        "self": "/papers/1"
+                    },
+                    "relationships": {
+                        TODO
+                    }
                 }
             }
         }
-    }
-    ```
+
+    :param db: A database session, injected by the ``Bottle`` plugin.
+    :returns: An ``HTTPResponse``.
     """
     data = json.loads(bottle.request.body.read().decode("utf-8"))
     # Validate the request
@@ -83,7 +87,9 @@ def create_by_doi(doi, db):
     """
     Create a new resource identified by its DOI, if it does not exist.
 
-    Return None if insertion failed, the Paper object otherwise.
+    :param doi: The DOI of the paper.
+    :param db: A database session.
+    :returns: ``None`` if insertion failed, the ``Paper`` object otherwise.
     """
     paper = database.Paper(doi=doi)
 
@@ -110,7 +116,9 @@ def create_by_arxiv(arxiv, db):
     Create a new resource identified by its arXiv eprint ID, if it does not
     exist.
 
-    Return None if insertion failed, the Paper object otherwise.
+    :param arxiv: The arXiv eprint ID.
+    :param db: A database session.
+    :returns: ``None`` if insertion failed, the ``Paper`` object otherwise.
     """
     paper = database.Paper(arxiv_id=arxiv)
 

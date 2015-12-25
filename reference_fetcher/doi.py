@@ -10,6 +10,9 @@ from . import tools
 def extract_doi_links(urls):
     """
     Try to find a DOI from a given list of URLs.
+
+    :param urls: A list of URLs.
+    :returns: First matching DOI URL, or ``None``.
     """
     doi_urls = [url for url in urls if "/doi/" in url]
     if len(doi_urls) > 0:
@@ -22,6 +25,9 @@ def extract_doi_links(urls):
 def extract_arxiv_links(urls):
     """
     Try to find an arXiv link from a given list of URLs.
+
+    :param urls: A list of URLs.
+    :returns: First matching arXiv URL, or ``None``.
     """
     arxiv_urls = [url for url in urls if "://arxiv.org" in url]
     if len(arxiv_urls) > 0:
@@ -35,9 +41,14 @@ def match_doi_or_arxiv(text, only=["DOI", "arXiv"]):
     Search for a valid article ID (DOI or ArXiv) in the given text
     (regex-based).
 
-    Returns a tuple (type, first matching ID) or None if not found.
-    From : http://en.dogeno.us/2010/02/release-a-python-script-for-organizing-scientific-papers-pyrenamepdf-py/
-    and https://github.com/minad/bibsync/blob/3fdf121016f6187a2fffc66a73cd33b45a20e55d/lib/bibsync/utils.rb
+    From \
+    http://en.dogeno.us/2010/02/release-a-python-script-for-organizing-scientific-papers-pyrenamepdf-py/ \
+    and \
+    https://github.com/minad/bibsync/blob/3fdf121016f6187a2fffc66a73cd33b45a20e55d/lib/bibsync/utils.rb.
+
+    :param text: Input text on which matching is to be done.
+    :param only: List of matches to look for (DOI/arXiv).
+    :returns: a tuple ``(type, first matching ID)`` or ``None`` if not found.
     """
     text = text.lower()
     # Try to extract DOI
@@ -86,10 +97,8 @@ def get_oa_version(doi):
     """
     Get an OA version for a given DOI.
 
-    Params:
-        - doi is a DOI or a dx.doi.org link.
-
-    Returns the URL of the OA version of the given DOI, or None.
+    :param doi: A DOI or a dx.doi.org link.
+    :returns: The URL of the OA version of the given DOI, or ``None``.
     """
     # If DOI is a link, truncate it
     if "dx.doi.org" in doi:

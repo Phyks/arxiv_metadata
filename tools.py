@@ -7,7 +7,10 @@ import json
 
 def pretty_json(data):
     """
-    Return pretty printed JSON-formatted string.
+    Return pretty-printed JSON-formatted string.
+
+    :param data: A string to be converted.
+    :returns: A pretty-printed JSON-formatted string.
     """
     return json.dumps(data,
                       sort_keys=True,
