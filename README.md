@@ -6,10 +6,16 @@ The goal of this repository is to provide a minimal API to put metadata on arXiv
 Disclaimer: This code is not scalable nor ready to run in production. In
 particular, it might be error-prone, and do not try to be resilient and keep
 trace of errors. It is here as a proof of concept and to back [this
-article](TODO) with some code. However, the `reference_fetcher` part is working
-quite well, and was able to extract most of the references from arXiv papers I
-tested it on. Note that it is quite long to run it on a paper, mainly due to
-the latency in [Crossref API](http://search.crossref.org/).
+article](http://known.phyks.me/2015/lets-some-metadata-on-arxiv) with some
+code. However, the `reference_fetcher` part is working quite well, and was able
+to extract most of the references from arXiv papers I tested it on. Note that
+it is quite long to run it on a paper, mainly due to the latency in [Crossref
+API](http://search.crossref.org/).
+
+
+A demo instance should be available at
+[http://arxiv.phyks.me/](http://arxiv.phyks.me/). This may not be very stable
+or highly available though.
 
 
 ## Special thanks
