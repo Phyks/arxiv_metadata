@@ -12,7 +12,7 @@ from reference_fetcher import arxiv
 
 def create_paper(db):
     """
-    Create a new resource identified by its DOI or arXiv eprint id.
+    Create a new paper identified by its DOI or arXiv eprint id.
 
     .. code-block:: bash
 
@@ -76,7 +76,7 @@ def create_paper(db):
 
     # Return the resource
     response = {
-        "data": paper.json_api_repr()
+        "data": paper.json_api_repr(db)
     }
     # Import "cite" relation
     add_cite_relationship(paper, db)
@@ -153,7 +153,6 @@ def add_cite_relationship(paper, db):
     :param db: A database session
     :returns: Nothing.
     """
-    # TODO: Known bug: too many levels of recursion!
     # If paper is on arXiv
     if paper.arxiv_id is not None:
         # Get the cited DOIs
@@ -169,7 +168,8 @@ def add_cite_relationship(paper, db):
                 # If paper does not exist in db, add it
                 right_paper = create_by_doi(doi, db)
                 # Update cite relationship for this paper, recursively
-                add_cite_relationship(right_paper, db)
+                # TODO: Known bug: too many levels of recursion!
+                # add_cite_relationship(right_paper, db)
             # Update the relationships
             update_relationship_backend(paper.id, right_paper.id, "cite", db)
     # If paper is not on arXiv, nothing to do
@@ -216,10 +216,21 @@ def update_relationships(id, name, db):
         return bottle.HTTPError(403, "Forbidden")
     # Update all the relationships
     for i in data:
-        updated = update_relationship_backend(id, i["id"], name, db)
-        if updated is None:
-            # An error occurred => 403
-            return bottle.HTTPError(403, "Forbidden")
+        if i["type"] == "tags":
+            # Handle tags separately
+            tag = db.query(database.Tag).filter_by(id=i["id"]).first()
+            paper = db.query(database.Paper).filter_by(id=id).first()
+            if paper is None or tag is None:
+                # An error occurred => 403
+                return bottle.HTTPError(403, "Forbidden")
+            paper.tags.append(tag)
+            db.add(paper)
+            db.flush()
+        else:
+            updated = update_relationship_backend(id, i["id"], name, db)
+            if updated is None:
+                # An error occurred => 403
+                return bottle.HTTPError(403, "Forbidden")
     # Return an empty 204 on success
     return tools.APIResponse(status=204, body="")
 
@@ -246,7 +257,7 @@ def update_relationship_backend(left_id, right_id, name, db):
         db.add(relationship)
         db.flush()
     # Update the relationship
-    a = database.Association(relationship_id=relationship.id)
+    a = database.RelationshipAssociation(relationship_id=relationship.id)
     a.right_paper = right_paper
     left_paper.related_to.append(a)
     try:
@@ -257,3 +268,70 @@ def update_relationship_backend(left_id, right_id, name, db):
         db.rollback()
         return None
     return left_paper
+
+
+def create_tag(db):
+    """
+    Create a new tag.
+
+    .. code-block:: bash
+
+        POST /tags
+        Content-Type: application/vnd.api+json
+        Accept: application/vnd.api+json
+
+        {
+            "data": {
+                "name": "foobar",
+            }
+        }
+
+
+    .. code-block:: json
+
+        {
+            "data": {
+                "type": "tags",
+                "id": 1,
+                "attributes": {
+                    "name": "foobar",
+                },
+                "links": {
+                    "self": "/tags/1"
+                }
+            }
+        }
+
+    :param db: A database session, injected by the ``Bottle`` plugin.
+    :returns: An ``HTTPResponse``.
+    """
+    data = json.loads(bottle.request.body.read().decode("utf-8"))
+    # Validate the request
+    if("data" not in data or
+       "type" not in data["data"] or
+       data["data"]["type"] != "tags" or
+       "name" not in data["data"]):
+        return bottle.HTTPError(403, "Forbidden")
+
+    data = data["data"]
+
+    tag = database.Tag(name=data["name"])
+
+    # Add it to the database
+    try:
+        db.add(tag)
+        db.flush()
+    except IntegrityError:
+        # Unique constraint violation, paper already exists
+        db.rollback()
+        return bottle.HTTPError(409, "Conflict")
+
+    # Return the resource
+    response = {
+        "data": tag.json_api_repr()
+    }
+    # Return 200 with the correct body
+    headers = {"Location": "/tags/%d" % (tag.id,)}
+    return tools.APIResponse(status=200,
+                             body=tools.pretty_json(response),
+                             headers=headers)

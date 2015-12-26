@@ -3,6 +3,30 @@ Metadata for arXiv
 
 The goal of this repository is to provide a minimal API to put metadata on arXiv papers.
 
+Disclaimer: This code is not scalable nor ready to run in production. In
+particular, it might be error-prone, and do not try to be resilient and keep
+trace of errors. It is here as a proof of concept and to back [this
+article](TODO) with some code. However, the `reference_fetcher` part is working
+quite well, and was able to extract most of the references from arXiv papers I
+tested it on. Note that it is quite long to run it on a paper, mainly due to
+the latency in [Crossref API](http://search.crossref.org/).
+
+
+## Special thanks
+
+Under the hood, this code uses the wonderful [Crossref
+API](http://search.crossref.org/) for reference parsing to DOI, which works
+really well and with a very large index.
+
+It also uses the [Dissemin API](http://beta.dissem.in/) in the
+`reference_fetcher` to try to find Open access versions of referenced papers.
+
+It works using the Open access [arXiv.org](http://arxiv.org) repository,
+without which it would be really difficult to achieve similar thing, due to
+paywalls and lack of sources. It also uses their
+[API](http://arxiv.org/help/api) to fetch DOIs from arXiv id and conversely.
+
+
 ## Introduction
 
 Most of the published scientific papers are availabe online, as preprints. For
@@ -218,6 +242,95 @@ Accept: application/vnd.api+json
 ```
 
 
+### Get tags
+
+```
+GET /tags
+Accept: application/vnd.api+json
+```
+
+Filtering is possible using ``id=ID``, ``name=NAME`` or any combination of
+these GET parameters. Other parameters are ignored.
+
+```json
+{
+    "data": [
+        {
+            "type": "tags",
+            "id": 1,
+            "attributes": {
+                "name": "foobar",
+            },
+            "links": {
+                "self": "/tags/1"
+            }
+        }
+    ]
+}
+```
+
+
+### Get a tag by id
+
+```
+GET /tag/1
+Accept: application/vnd.api+json
+```
+
+```json
+{
+    "data": {
+        "type": "papers",
+        "id": 1,
+        "attributes": {
+            "doi": "10.1126/science.1252319",
+            "arxiv_id": "1401.2910"
+        },
+        "links": {
+            "self": "/papers/1"
+        },
+        "relationships": {
+            "cite": {
+                "links": {
+                    "related": "/papers/1/relationships/cite"
+                }
+            },
+            …
+        }
+    }
+}
+```
+
+### Create a tag
+
+```
+POST /tags
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": {
+        "name": "foobar",
+    }
+}
+```
+
+```json
+{
+    "data": {
+        "type": "tags",
+        "id": 1,
+        "attributes": {
+            "name": "foobar",
+        },
+        "links": {
+            "self": "/tags/1"
+        }
+    }
+}
+```
+
+
 ### Create a relationship between two papers
 
 ```
@@ -232,6 +345,26 @@ Accept: application/vnd.api+json
     ]
 }
 ```
+
+Response is empty HTTP 204.
+
+
+### Add a tag to a paper
+
+```
+POST /papers/1/relationships/tags
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": [
+        { "type": "tags", "id": "2" },
+        ...
+    ]
+}
+```
+
+`id` is the id of the tag, which has to be created previously.
 
 Response is empty HTTP 204.
 
@@ -260,6 +393,26 @@ Accept: application/vnd.api+json
     ]
 }
 ```
+
+Response is empty HTTP 204.
+
+
+### Deleting a tag for a paper
+
+```
+DELETE /papers/1/relationships/tags
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+    "data": [
+        { "type": "tags", "id": "2" },
+        ...
+    ]
+}
+```
+
+`id` is the id of the tag.
 
 Response is empty HTTP 204.
 

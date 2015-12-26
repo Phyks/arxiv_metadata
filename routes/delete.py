@@ -73,13 +73,27 @@ def delete_relationship(id, name, db):
         return bottle.HTTPError(403, "Forbidden")
     # Delete all the requested relationships
     for i in data:
-        relationship = (db.query(database.Association)
-                        .filter_by(left_id=id, right_id=i["id"])
-                        .filter(database.Relationship.name == name)
-                        .first())
-        if relationship is None:
-            # An error occurred => 403
-            return bottle.HTTPError(403, "Forbidden")
-        db.delete(relationship)
+        if i["type"] == "tags":
+            # Handle tags separately
+            tag = db.query(database.Tag).filter_by(id=i["id"]).first()
+            paper = db.query(database.Paper).filter_by(id=id).first()
+            if paper is None or tag is None:
+                # An error occurred => 403
+                return bottle.HTTPError(403, "Forbidden")
+            try:
+                paper.tags.remove(tag)
+            except ValueError:
+                # An error occurred => 403
+                return bottle.HTTPError(403, "Forbidden")
+            db.flush()
+        else:
+            relationship = (db.query(database.RelationshipAssociation)
+                            .filter_by(left_id=id, right_id=i["id"])
+                            .filter(database.Relationship.name == name)
+                            .first())
+            if relationship is None:
+                # An error occurred => 403
+                return bottle.HTTPError(403, "Forbidden")
+            db.delete(relationship)
     # Return an empty 204 on success
     return tools.APIResponse(status=204, body="")

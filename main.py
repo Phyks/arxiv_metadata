@@ -41,7 +41,7 @@ def index():
     }))
 
 app.get("/papers", callback=routes.get.fetch_papers)
-app.get("/papers/<id:int>", callback=routes.get.fetch_by_id)
+app.get("/papers/<id:int>", callback=routes.get.fetch_papers_by_id)
 app.get("/papers/<id:int>/relationships/<name>",
         callback=routes.get.fetch_relationship)
 app.get("/papers/<id:int>/<name>",
@@ -51,8 +51,12 @@ app.route("/papers/<id:int>", method="DELETE",
 app.route("/papers/<id:int>/relationships/<name>", method="DELETE",
           callback=routes.delete.delete_relationship)
 
+app.get("/tags", callback=routes.get.fetch_tags)
+app.get("/tags/<id:int>", callback=routes.get.fetch_tags_by_id)
+
 
 app.post("/papers", callback=routes.post.create_paper)
+app.post("/tags", callback=routes.post.create_tag)
 
 app.post("/papers/<id:int>/relationships/<name>",
          callback=routes.post.update_relationships)
