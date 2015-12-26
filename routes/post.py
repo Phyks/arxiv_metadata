@@ -71,7 +71,7 @@ def create_paper(db):
     if "doi" in data:
         paper = create_by_doi(data["doi"], db)
     elif "arxiv_id" in data:
-        paper = create_by_arxiv(data["arxiv"], db)
+        paper = create_by_arxiv(data["arxiv_id"], db)
 
     if paper is None:
         return bottle.HTTPError(409, "Conflict")
