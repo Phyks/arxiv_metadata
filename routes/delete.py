@@ -97,3 +97,28 @@ def delete_relationship(id, name, db):
             db.delete(relationship)
     # Return an empty 204 on success
     return tools.APIResponse(status=204, body="")
+
+
+def delete_tag(id, db):
+    """
+    Delete a given tag.
+
+    .. code-block:: bash
+
+        DELETE /tags/1
+        Accept: application/vnd.api+json
+
+
+    .. code-block:: bash
+
+        HTTP 204
+
+    :param id: The id of the requested tag to be deleted.
+    :param db: A database session, injected by the ``Bottle`` plugin.
+    :returns: An ``HTTPResponse``.
+    """
+    resource = db.query(database.Tag).filter_by(id=id).first()
+    if resource:
+        db.delete(resource)
+        return tools.APIResponse(status=204, body="")
+    return bottle.HTTPError(404, "Not found")

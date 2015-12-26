@@ -35,15 +35,12 @@ class RelationshipAssociation(Base):
                                         ondelete="CASCADE"))
     right_paper = sqlalchemy_relationship("Paper",
                                           foreign_keys=right_id,
-                                          back_populates="related_by",
-                                          passive_deletes=True)
-    relationship = sqlalchemy_relationship("Relationship",
-                                           passive_deletes=True)
+                                          back_populates="related_by")
+    relationship = sqlalchemy_relationship("Relationship")
 
     left_paper = sqlalchemy_relationship("Paper",
                                          foreign_keys=left_id,
-                                         back_populates="related_to",
-                                         passive_deletes=True)
+                                         back_populates="related_to")
 
 tag_association_table = Table(
     'tag_association', Base.metadata,
@@ -56,7 +53,7 @@ class Paper(Base):
     __tablename__ = "papers"
     id = Column(Integer, primary_key=True)
     doi = Column(String(), nullable=True, unique=True)
-    arxiv_id = Column(String(25), nullable=True, unique=True)
+    arxiv_id = Column(String(30), nullable=True, unique=True)
     # related_to are papers related to this paper (this_paper R …)
     related_to = sqlalchemy_relationship("RelationshipAssociation",
                                          foreign_keys="RelationshipAssociation.left_id",
@@ -70,7 +67,8 @@ class Paper(Base):
     # Tags relationship
     tags = sqlalchemy_relationship("Tag",
                                    secondary=tag_association_table,
-                                   backref="papers")
+                                   backref="papers",
+                                   passive_deletes=True)
 
     def __repr__(self):
         return "<Paper(id='%d', doi='%s', arxiv_id='%s')>" % (
@@ -142,3 +140,12 @@ class Tag(Base):
                 "self": "/tags/%d" % (self.id,)
             }
         }
+
+
+class CitationProcessingQueue(Base):
+    __tablename__ = "citationprocessingqueue"
+    id = Column(Integer, primary_key=True)
+    paper_id = Column(Integer,
+                      ForeignKey('papers.id', ondelete="CASCADE"),
+                      unique=True)
+    paper = sqlalchemy_relationship("Paper")

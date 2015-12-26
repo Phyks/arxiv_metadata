@@ -2,6 +2,7 @@
 import bottle
 from bottle.ext import sqlalchemy
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 import config
 import database
@@ -10,6 +11,8 @@ import tools
 
 # Initialize db and include the SQLAlchemy plugin in bottle
 engine = create_engine('sqlite:///%s' % (config.database,), echo=True)
+create_session = sessionmaker(bind=engine)
+database.Base.metadata.create_all(engine)
 
 app = bottle.Bottle()
 plugin = sqlalchemy.Plugin(
@@ -21,13 +24,15 @@ plugin = sqlalchemy.Plugin(
     keyword='db',
     # If it is true, execute `metadata.create_all(engine)` when plugin is
     # applied (default False).
-    create=True,
+    create=False,
     # If it is true, plugin commit changes after route is executed (default
     # True).
     commit=True,
     # If it is true and keyword is not defined, plugin uses **kwargs argument
     # to inject session database (default False).
-    use_kwargs=False
+    use_kwargs=False,
+    # Create session method
+    create_session=create_session
 )
 
 app.install(plugin)
@@ -53,6 +58,8 @@ app.route("/papers/<id:int>/relationships/<name>", method="DELETE",
 
 app.get("/tags", callback=routes.get.fetch_tags)
 app.get("/tags/<id:int>", callback=routes.get.fetch_tags_by_id)
+app.route("/tags/<id:int>", method="DELETE",
+          callback=routes.delete.delete_tag)
 
 
 app.post("/papers", callback=routes.post.create_paper)
@@ -66,4 +73,5 @@ app.route("/papers/<id:int>/relationships/<name>", method="PATCH",
 
 
 if __name__ == "__main__":
+    routes.post.fetch_citations_in_queue(create_session)
     app.run(host=config.host, port=config.port, debug=(not config.production))

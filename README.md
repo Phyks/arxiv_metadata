@@ -379,6 +379,16 @@ Accept: application/vnd.api+json
 Response is empty HTTP 204.
 
 
+### Delete a tag
+
+```
+DELETE /tags/1
+Accept: application/vnd.api+json
+```
+
+Response is empty HTTP 204.
+
+
 ### Delete a relationship between two papers
 
 ```

@@ -18,6 +18,27 @@ def pretty_json(data):
                       separators=(',', ': '))
 
 
+def get_identifier_from_url(url):
+    """
+    Get the identifier out of a DOI or arXiv URL.
+
+    :param url: An input URL.
+    :returns: A tuple ``(type, identifier)``. Returns ``(None, None)`` if \
+            could not match.
+    """
+    type = None
+    identifier = None
+
+    if "dx.doi.org" in url:
+        type = "doi"
+        identifier = url[url.find("dx.doi.org") + 11:]
+    elif "arxiv.org/abs" in url:
+        type = "arxiv_id"
+        identifier = url[url.find("arxiv.org/abs/") + 14:]
+
+    return (type, identifier)
+
+
 class APIResponse(bottle.HTTPResponse):
     """
     Extend bottle.HTTPResponse base class to add Content-Type header.

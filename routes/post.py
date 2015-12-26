@@ -3,8 +3,10 @@ This file contains POST routes methods.
 """
 import bottle
 import json
+import threading
 from sqlalchemy.exc import IntegrityError
 
+import config
 import database
 import tools
 from reference_fetcher import arxiv
@@ -115,19 +117,19 @@ def create_by_doi(doi, db):
     return paper
 
 
-def create_by_arxiv(arxiv, db):
+def create_by_arxiv(arxiv_id, db):
     """
     Create a new resource identified by its arXiv eprint ID, if it does not
     exist.
 
-    :param arxiv: The arXiv eprint ID.
+    :param arxiv_id: The arXiv eprint ID.
     :param db: A database session.
     :returns: ``None`` if insertion failed, the ``Paper`` object otherwise.
     """
-    paper = database.Paper(arxiv_id=arxiv)
+    paper = database.Paper(arxiv_id=arxiv_id)
 
     # Try to fetch an arXiv id
-    doi = arxiv.get_doi(arxiv)
+    doi = arxiv.get_doi(arxiv_id)
     if doi:
         paper.doi = doi
 
@@ -156,25 +158,73 @@ def add_cite_relationship(paper, db):
     # If paper is on arXiv
     if paper.arxiv_id is not None:
         # Get the cited DOIs
-        cited_dois = arxiv.get_cited_dois(paper.arxiv_id)
+        cited_urls = arxiv.get_cited_dois(paper.arxiv_id)
         # Filter out the ones that were not matched
-        cited_dois = [cited_dois[k]
-                      for k in cited_dois if cited_dois[k] is not None]
-        for doi in cited_dois:
+        cited_urls = [cited_urls[k]
+                      for k in cited_urls if cited_urls[k] is not None]
+        for url in cited_urls:
+            type, identifier = tools.get_identifier_from_url(url)
+            if type is None:
+                # No identifier found
+                continue
             # Get the associated paper in the db
-            right_paper = (db.query(database.Paper).
-                           filter_by(doi=doi).first())
+            right_paper = (db.query(database.Paper)
+                           .filter(getattr(database.Paper, type) == identifier)
+                           .first())
             if right_paper is None:
-                # If paper does not exist in db, add it
-                right_paper = create_by_doi(doi, db)
-                # Update cite relationship for this paper, recursively
-                # TODO: Known bug: too many levels of recursion!
-                # add_cite_relationship(right_paper, db)
+                # If paper is not in db, add it
+                if type == "doi":
+                    right_paper = create_by_doi(identifier, db)
+                elif type == "arxiv_id":
+                    right_paper = create_by_arxiv(identifier, db)
+                else:
+                    continue
+                # Push this paper on the queue for update of cite relationships
+                queue = database.CitationProcessingQueue()
+                queue.paper = right_paper
+                try:
+                    db.add(queue)
+                except IntegrityError:
+                    # Unique constraint violation, relationship already exists
+                    db.rollback()
             # Update the relationships
             update_relationship_backend(paper.id, right_paper.id, "cite", db)
     # If paper is not on arXiv, nothing to do
     else:
         return
+
+
+def fetch_citations_in_queue(create_session):
+    """
+    Process the first item in the queue, waiting for citation processing.
+
+    i.. note::
+
+            Calls itself recursively after the time defined in ``config``, so
+            that queued articles are processed concurrently.
+
+    :param create_session: a ``SQLAlchemy`` ``sessionmaker``.
+    :returns: Nothing.
+    """
+    # Get a db Session
+    db = create_session()
+    queued = db.query(database.CitationProcessingQueue).first()
+    if queued:
+        print("Processing citation relationships for %s." % (queued.paper,))
+        # Process this paper
+        add_cite_relationship(queued.paper, db)
+        # Remove this paper from queue
+        db.delete(queued)
+        # Commit to the database
+        try:
+            db.commit()
+        except:
+            db.rollback()
+    # Call this function again after a while
+    threading.Timer(
+        config.queue_polling_interval,
+        lambda: fetch_citations_in_queue(create_session)
+    ).start()
 
 
 def update_relationships(id, name, db):
