@@ -208,7 +208,7 @@ def fetch_tags(db):
     filters = {k: bottle.request.params[k]
                for k in bottle.request.params
                if k in ["id", "name"]}
-    resources = db.query(database.Tags).filter_by(**filters).all()
+    resources = db.query(database.Tag).filter_by(**filters).all()
     if resources:
         return tools.APIResponse(tools.pretty_json({
             "data": [resource.json_api_repr() for resource in resources]
@@ -254,7 +254,7 @@ def fetch_tags_by_id(id, db):
     :param db: A database session, injected by the ``Bottle`` plugin.
     :returns: An ``HTTPResponse``.
     """
-    resource = db.query(database.Tags).filter_by(id=id).first()
+    resource = db.query(database.Tag).filter_by(id=id).first()
     if resource:
         return tools.APIResponse(tools.pretty_json({
             "data": resource.json_api_repr()
