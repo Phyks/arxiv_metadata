@@ -1,5 +1,8 @@
+import os
+basepath = os.path.dirname(os.path.realpath(__file__))
+
 database = ":memory:"
-# database = "db.sqlite3"
+# database = os.path.join(basepath, "db.sqlite3")
 
 host = "localhost"
 port = 8080
