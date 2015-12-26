@@ -5,3 +5,5 @@ host = "localhost"
 port = 8080
 
 production = False
+
+queue_polling_interval = 30
