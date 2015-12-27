@@ -524,3 +524,8 @@ $ ./fetch_reference.py /tmp/test.bbl
  'Sidorenkov L. A., Tey M. K., Grimm R., Hou Y.-H., Pitaevskii L. Stringari S. Nature 498 2013 78 letter': 'http://dx.doi.org/10.1038/nature12136',
  'Taylor E., Hu H., Liu X.-J., Pitaevskii L. P., Griffin A. Stringari S. Phys. Rev. A 80 2009 053601': 'http://dx.doi.org/10.1103/physreva.80.053601'}
  ```
+
+## License
+
+All the codes in this repository (excepted the `opendetex` code which is not
+from me) are under an MIT License. Feel free to reuse, fork, PR and contribute!
