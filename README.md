@@ -17,6 +17,8 @@ A demo instance should be available at
 [http://arxiv.phyks.me/](http://arxiv.phyks.me/). This may not be very stable
 or highly available though.
 
+**Note: If you want to extract some functions from this repo, please consider using [libbmc](https://github.com/Phyks/libbmc/) instead, which is specifically dedicated to this (and this repo should be using it, rather than duplicating code).**
+
 
 ## Special thanks
 
